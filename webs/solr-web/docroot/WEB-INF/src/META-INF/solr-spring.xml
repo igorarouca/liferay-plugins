@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <beans
 	default-destroy-method="destroy"
@@ -9,52 +9,43 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd"
 >
 	<bean class="com.liferay.portal.spring.context.PortletBeanFactoryPostProcessor" />
-
-	<!-- Solr search engine -->
-
-	<bean id="com.liferay.portal.search.solr.server.BasicAuthSolrServer" class="com.liferay.portal.search.solr.server.BasicAuthSolrServer">
-		<constructor-arg type="java.lang.String" value="http://localhost:8080/solr" />
+	
+	<bean id="cloudServer" class="com.liferay.portal.search.solr.server.BasicCloudSolrServer">
+		<constructor-arg type="java.lang.String" value="172.16.0.224:2181" />
+		<constructor-arg type="java.lang.String" value="liferay" />
 	</bean>
-	<bean id="com.liferay.portal.search.solr.server.LiveServerChecker" class="com.liferay.portal.search.solr.server.LiveServerChecker">
-		<constructor-arg>
-			<bean class="com.liferay.portal.search.solr.server.SolrServerFactoryImpl">
-				<constructor-arg>
-					<map key-type="java.lang.String" value-type="org.apache.solr.client.solrj.SolrServer">
-						<entry key="node1">
-							<ref bean="com.liferay.portal.search.solr.server.BasicAuthSolrServer" />
-						</entry>
-					</map>
-				</constructor-arg>
-				<property name="solrServerSelector">
-					<bean class="com.liferay.portal.search.solr.server.LoadBalancedSolrServerSelector" />
-				</property>
-			</bean>
-		</constructor-arg>
-		<constructor-arg type="java.lang.Long" value="10" />
+	<bean id="com.liferay.portal.kernel.search.IndexSearcher" class="com.liferay.portal.search.solr.SolrIndexSearcherImpl">
+		<property name="solrServer" ref="cloudServer" />
 	</bean>
-	<bean id="com.liferay.portal.search.solr.SolrIndexSearcherImpl" class="com.liferay.portal.search.solr.SolrIndexSearcherImpl">
-		<property name="solrServer" ref="com.liferay.portal.search.solr.server.BasicAuthSolrServer" />
-		<property name="swallowException" value="true" />
-	</bean>
-	<bean id="com.liferay.portal.search.solr.SolrIndexWriterImpl" class="com.liferay.portal.search.solr.SolrIndexWriterImpl">
+	<bean id="com.liferay.portal.kernel.search.IndexWriter" class="com.liferay.portal.search.solr.SolrIndexWriterImpl">
 		<property name="commit" value="true" />
-		<property name="solrServer" ref="com.liferay.portal.search.solr.server.BasicAuthSolrServer" />
+		<property name="solrServer" ref="cloudServer" />
 	</bean>
-	<bean id="com.liferay.portal.search.solr.SolrSearchEngineImpl" class="com.liferay.portal.kernel.search.BaseSearchEngine">
-		<property name="clusteredWrite" value="false" />
-		<property name="indexSearcher" ref="com.liferay.portal.search.solr.SolrIndexSearcherImpl" />
-		<property name="indexWriter" ref="com.liferay.portal.search.solr.SolrIndexWriterImpl" />
-		<property name="luceneBased" value="true" />
+	
+	<bean id="com.liferay.portal.search.solr.SolrSearchEngine" class="com.liferay.portal.kernel.search.BaseSearchEngine">
+		<property name="indexSearcher" ref="com.liferay.portal.kernel.search.IndexSearcher" />
+		<property name="indexWriter" ref="com.liferay.portal.kernel.search.IndexWriter" />
 		<property name="vendor" value="SOLR" />
 	</bean>
-
-	<!-- Configurator -->
-
+	
+		<!-- Configurator -->
+		
 	<bean id="searchEngineConfigurator.solr" class="com.liferay.portal.kernel.search.PluginSearchEngineConfigurator">
 		<property name="searchEngines">
 			<util:map>
-				<entry key="SYSTEM_ENGINE" value-ref="com.liferay.portal.search.solr.SolrSearchEngineImpl" />
+				<entry key="SYSTEM_ENGINE" value-ref="com.liferay.portal.search.solr.SolrSearchEngine" />
 			</util:map>
 		</property>
 	</bean>
+	
+	<bean id="messageListener.search_reader" class="com.liferay.portal.kernel.search.messaging.SearchReaderMessageListener">
+		<property name="searchEngine" ref="com.liferay.portal.search.solr.SolrSearchEngine" />
+	</bean>
+	<bean id="messageListener.search_writer" class="com.liferay.portal.kernel.search.messaging.SearchWriterMessageListener">
+		<property name="searchEngine" ref="com.liferay.portal.search.solr.SolrSearchEngine" />
+	</bean>
+	
+	<bean id="messagingConfigurator.solr" class="com.liferay.portal.kernel.messaging.config.PluginMessagingConfigurator">
+	</bean>
+	
 </beans>

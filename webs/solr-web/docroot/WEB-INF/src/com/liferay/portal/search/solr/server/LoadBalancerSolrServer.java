@@ -22,6 +22,7 @@ import org.apache.solr.common.util.NamedList;
 
 /**
  * @author Bruno Farache
+ * @author Israel Olalla
  */
 public class LoadBalancerSolrServer extends SolrServer {
 
@@ -47,5 +48,8 @@ public class LoadBalancerSolrServer extends SolrServer {
 	}
 
 	private SolrServerFactory _solrServerFactory;
-
+	public void shutdown() {
+		// TODO Auto-generated method stub
+		
+	}
 }

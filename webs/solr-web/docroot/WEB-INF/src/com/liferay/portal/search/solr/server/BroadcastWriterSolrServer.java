@@ -27,6 +27,7 @@ import org.apache.solr.common.util.NamedList;
 
 /**
  * @author Bruno Farache
+ * @author Israel Olalla
  */
 public class BroadcastWriterSolrServer extends SolrServer {
 
@@ -71,5 +72,8 @@ public class BroadcastWriterSolrServer extends SolrServer {
 		BroadcastWriterSolrServer.class);
 
 	private SolrServerFactory _solrServerFactory;
-
+	public void shutdown() {
+		// TODO Auto-generated method stub
+		
+	}
 }
